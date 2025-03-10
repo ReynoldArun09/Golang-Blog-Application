@@ -1,0 +1,12 @@
+root = "."
+
+bin = "tmp/main"
+
+watch_ext = ["go"]
+
+cmd = "go run main.go"
+
+[watch]
+dirs = ["tmp"]
+
+delay = 200
