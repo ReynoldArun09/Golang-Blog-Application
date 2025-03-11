@@ -6,6 +6,8 @@ import (
 
 	"github.com/ReynoldArun09/blog-application-golang/models"
 	"github.com/ReynoldArun09/blog-application-golang/services"
+	"github.com/ReynoldArun09/blog-application-golang/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
@@ -24,13 +26,32 @@ func (c *UserController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		http.Error(w, "something went wrong!!", http.StatusInternalServerError)
+		return
+	}
+
+	user.Password = string(hashedPassword)
+
 	if err := c.userService.CreateUser(user); err != nil {
 		http.Error(w, "failed to create user", http.StatusInternalServerError)
 		return
 	}
 
+	userResponse := struct {
+		ID       uint   `json:"id"`
+		Email    string `json:"email"`
+		Username string `json:"username"`
+	}{
+		ID:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+	}
+
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(userResponse)
 }
 
 func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
@@ -41,12 +62,28 @@ func (c *UserController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := c.userService.GetUser(user.Email)
+	existingUser, err := c.userService.GetUser(user.Email)
 
 	if err != nil {
 		http.Error(w, "User not found", http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password)); err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := utils.GenerateJwt(existingUser)
+
+	if err != nil {
+		http.Error(w, "invalid credentials", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "Login Success",
+		"token":   token,
+	})
 }

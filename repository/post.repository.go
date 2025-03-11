@@ -30,7 +30,7 @@ func (p *PostRepositoryImpl) CreatePost(post *models.Post) error {
 // DeletePost implements PostRepository.
 func (p *PostRepositoryImpl) DeletePost(id uint) (string, error) {
 	var post *models.Post
-	if err := p.db.Where("id == ?", id).Delete(&post).Error; err != nil {
+	if err := p.db.Where("id = ?", id).Delete(&post).Error; err != nil {
 		if gorm.ErrRecordNotFound == err {
 			return "", fmt.Errorf("post with this id %v not found", id)
 		}
