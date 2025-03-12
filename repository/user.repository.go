@@ -21,8 +21,9 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &UserRepositoryImpl{db: db}
 }
 
-// CreateUser create a user in the database.
-// if user already exist it return error
+// CreateUser implements PostRepository.
+// creates a new user in database.
+// takes a pointer as input and return error if creation fails.
 func (u *UserRepositoryImpl) CreateUser(user *models.User) error {
 	if err := u.db.Create(user).Error; err != nil {
 		if gorm.ErrDuplicatedKey == err {
@@ -33,7 +34,8 @@ func (u *UserRepositoryImpl) CreateUser(user *models.User) error {
 	return nil
 }
 
-// GetUser retrieves a user by email from the database and returns a pointer to the user.
+// GetUser implements PostRepository.
+// getuser receives email as input and returns user. it returns error if user not found.
 func (u *UserRepositoryImpl) GetUser(email string) (*models.User, error) {
 	var user models.User
 

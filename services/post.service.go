@@ -10,10 +10,16 @@ type PostService interface {
 	SinglePost(id uint) (*models.Post, error)
 	DeletePost(id uint) (string, error)
 	CreatePost(post *models.Post) error
+	SearchPosts(query string) (*[]models.Post, error)
 }
 
 type PostServiceImpl struct {
 	repo repository.PostRepository
+}
+
+func (p *PostServiceImpl) SearchPosts(query string) (*[]models.Post, error) {
+	posts, err := p.repo.SearchPosts(query)
+	return posts, err
 }
 
 // CreatePost implements PostService.

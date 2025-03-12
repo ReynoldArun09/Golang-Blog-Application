@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -61,7 +62,7 @@ func (c *PostController) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post.UserId = userID
+	post.UserID = userID
 
 	err := c.postService.CreatePost(post)
 
@@ -97,7 +98,7 @@ func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if existingPost.UserId != userID {
+	if existingPost.User.ID != userID {
 		http.Error(w, "You cannot delete someone else post", http.StatusNotFound)
 		return
 	}
@@ -111,4 +112,26 @@ func (c *PostController) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(post)
+}
+
+func (c *PostController) SearchPosts(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("query")
+
+	fmt.Println(query)
+
+	if query == "" {
+		http.Error(w, "Query parameter is missing", http.StatusBadRequest)
+		return
+	}
+
+	posts, err := c.postService.SearchPosts(query)
+
+	if err != nil {
+		http.Error(w, "Failed to search posts", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(posts)
+
 }
